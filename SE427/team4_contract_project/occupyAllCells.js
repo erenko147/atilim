@@ -1,4 +1,4 @@
-const {Web3} = require("web3");
+const { Web3 } = require("web3");
 require("dotenv").config();
 const fs = require("fs");
 
@@ -36,8 +36,11 @@ async function main() {
 
   console.log(`My Team Number: ${myTeamNumber}`);
 
+  // Initialize nonce
+  let nonce = await web3.eth.getTransactionCount(signer.address, "pending");
+
   // Iterate through all cells
-  for (let x = 2; x < gridSize; x++) {
+  for (let x = 3; x < gridSize; x++) {
     for (let y = 0; y < gridSize; y++) {
       console.log(`\nProcessing cell (${x}, ${y})`);
 
@@ -62,26 +65,26 @@ async function main() {
       `);
 
       const upperValue = BigInt(upper);
-      let nonce;
+      let nonceValue;
       let newUpper;
       let found = false;
 
       console.log("Searching for a valid nonce...");
 
       for (let i = 0; i < 1000000; i++) {
-        nonce = web3.utils.randomHex(32);
+        nonceValue = web3.utils.randomHex(32);
 
         newUpper = web3.utils.soliditySha3(
           { type: "bytes32", value: hash },
           { type: "int256", value: rank },
           { type: "int256", value: myTeamNumber },
-          { type: "bytes32", value: nonce }
+          { type: "bytes32", value: nonceValue }
         );
 
         const newUpperValue = BigInt(newUpper);
 
         if (newUpperValue > upperValue) {
-          console.log(`Found valid nonce: ${nonce}`);
+          console.log(`Found valid nonce: ${nonceValue}`);
           found = true;
           break;
         }
@@ -92,32 +95,40 @@ async function main() {
         continue;
       }
 
-      try {
-        const occupyTx = teamContract.methods.occupyCell(x, y, nonce);
-      
-        const value = web3.utils.toWei("0.0001", "ether"); // Value must be a string
-        const gasEstimate = await occupyTx.estimateGas({ from: signer.address, value });
-        const gasEstimateBN = BigInt(gasEstimate);
-        const gas = gasEstimateBN; // Add 20% buffer * (gasEstimateBN * 12n) / 10n;
-        const gasPriceBN = BigInt(await web3.eth.getGasPrice()); // Gas price in wei
-      
-        const receipt = await occupyTx
-          .send({
-            from: signer.address,
-            gas: gas.toString(),
-            gasPrice: gasPriceBN.toString(),
-            value,
-          })
-          .once("transactionHash", (txhash) => {
-            console.log(`Mining transaction ...`);
-            console.log(`https://${network}.etherscan.io/tx/${txhash}`);
-          });
-      
-        console.log(`Successfully occupied cell (${x}, ${y}):`, receipt);
-      } catch (error) {
-        console.error(`Failed to occupy cell (${x}, ${y}): ${error.message}`);
-      }
-      
+      // Send transaction without awaiting its completion
+      const occupyTx = teamContract.methods.occupyCell(x, y, nonceValue);
+
+      const value = web3.utils.toWei("0.0001", "ether"); // Value must be a string
+      const gasEstimate = await occupyTx.estimateGas({
+        from: signer.address,
+        value,
+      });
+      const gasEstimateBN = BigInt(gasEstimate);
+      const gas = gasEstimateBN;
+      const gasPriceBN = BigInt(await web3.eth.getGasPrice()); // Gas price in wei
+
+      // Send the transaction without awaiting it
+      occupyTx
+        .send({
+          from: signer.address,
+          gas: gas.toString(),
+          gasPrice: gasPriceBN.toString(),
+          value,
+          nonce: nonce,
+        })
+        .once("transactionHash", (txhash) => {
+          console.log(`Transaction sent: ${txhash}`);
+          console.log(`https://${network}.etherscan.io/tx/${txhash}`);
+        })
+        .once("receipt", (receipt) => {
+          console.log(`Transaction mined:`, receipt);
+        })
+        .on("error", (error) => {
+          console.error(`Failed to occupy cell (${x}, ${y}): ${error.message}`);
+        });
+
+      // Increment nonce for the next transaction
+      nonce++;
     }
   }
 
