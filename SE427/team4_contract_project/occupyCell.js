@@ -3,6 +3,7 @@ require("dotenv").config();
 const fs = require("fs");
 
 async function main() {
+  
   const network = process.env.ETHEREUM_NETWORK;
   const web3 = new Web3(
     new Web3.providers.HttpProvider(
@@ -28,8 +29,8 @@ async function main() {
     process.env.CENTRAL_CONTRACT_ADDRESS
   );
 
-  const x = 5; // Specify x coordinate
-  const y = 5; // Specify y coordinate
+  const x = 6; // Specify x coordinate
+  const y = 9; // Specify y coordinate
 
   const hash = await centralContract.methods.getCellHash(x, y).call();
   const rank = await centralContract.methods.getCellRank(x, y).call();

@@ -51,7 +51,7 @@ async function main() {
   // Display cell occupation status
   console.log("\nCell Occupation Status:");
   const gridSize = 10; // Assuming a 10x10 grid
-
+/*
   for (let x = 0; x < gridSize; x++) {
     for (let y = 0; y < gridSize; y++) {
       const cellTeamNumber = await centralContract.methods
@@ -65,7 +65,7 @@ async function main() {
       }
     }
   }
-
+*/
   // Call getter functions
   const totalCalls = await teamContract.methods.getTotalCalls().call();
   console.log(`\nTotal Calls to Central Contract: ${totalCalls}`);
