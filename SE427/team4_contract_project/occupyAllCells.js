@@ -50,7 +50,7 @@ async function main() {
 
       if (Number(teamNumber) === Number(myTeamNumber)) {
         console.log(`Cell (${x}, ${y}) is already owned by your team.`);
-        continue; // Skip if the cell is owned by your team
+        continue; // Skip if the cell is owned by me
       }
 
       const hash = await centralContract.methods.getCellHash(x, y).call();
