@@ -53,8 +53,7 @@ async function main() {
   // Occupy cells
   for (const cell of unoccupiedCells) {
     console.log(`Processing cell (${cell.x}, ${cell.y}) with upper: ${cell.upper}`);
-    // Implement occupyCell logic here
-    // ...
+    // To be Implement occupyCell logic!!!
   }
 
   console.log("Finished processing cells.");
